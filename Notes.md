@@ -25,6 +25,16 @@ The common name for all building blocks that build up a Flow or FlowGraph.
 Examples of a processing stage would be operations like `map()`, `filter()`,
 stages added by `transform()` like `PushStage`, `PushPullStage`, `StatefulStage`
 and graph junctions like `Merge` or `Broadcast`.
+
+*Note: Processing Stages are immutable*
+```
+val source = Source(1 to 10)
+source.map(_ => 0) // has no effect on source, since it's immutable
+source.runWith(Sink.fold(0)(_ + _)) // 55
+
+val zeroes = source.map(_ => 0) // returns new Source[Int], with `map()` appended
+zeroes.runWith(Sink.fold(0)(_ + _)) // 0
+```
 ___
 
 Defining and running streams
