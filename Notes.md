@@ -72,3 +72,18 @@ val runnable: RunnableGraph[Future[Int]] = source.toMat(sink)(Keep.right)
 // materialize the flow and get the value of the FoldSink
 val sum: Future[Int] = runnable.run()
 ```
+
+After running (materializing) the `RunnableGraph[T]` we get back the
+materialized value of type` T`. Every stream processing stage can produce a
+materialized value, and it is the responsibility of the user to combine them to
+a new type. In the above example we used `toMat` to indicate that we want to
+transform the materialized value of the source and sink, and we used the
+convenience function `Keep.right` to say that we are only interested in the
+materialized value of the sink. In our example the FoldSink materializes a value
+of type `Future` which will represent the result of the folding process over the
+stream. In general, a stream can expose multiple materialized values, but it is
+quite common to be interested in only the value of the Source or the Sink in
+the stream. For this reason there is a convenience method called `runWith()`
+available for Sink, Source or Flow requiring, respectively, a supplied Source
+(in order to run a Sink), a Sink (in order to run a Source) or both a Source
+and a Sink (in order to run a Flow, since it has neither attached yet).
