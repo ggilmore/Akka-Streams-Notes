@@ -42,4 +42,12 @@ A processing stage which has exactly one input and output, which connects its
 up- and downstreams by transforming the data elements flowing through it.
 
 - RunnableGraph:
-A Flow that has both ends "attached" to a Source and Sink respectively, and is ready to be run().
+A Flow that has both ends "attached" to a Source and Sink respectively, and is
+ready to be `run()`.
+
+It is important to remember that even after constructing the `RunnableGraph`
+by connecting all the source, sink and different processing stages, no data will
+ flow through it until it is materialized. **Materialization**
+is the process of allocating all resources needed to run the computation
+ described by a Flow (in Akka Streams this will often involve starting up
+Actors).
