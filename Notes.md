@@ -61,3 +61,14 @@ by connecting all the source, sink and different processing stages, no data will
 is the process of allocating all resources needed to run the computation
  described by a Flow (in Akka Streams this will often involve starting up
 Actors).
+
+```
+val source = Source(1 to 10)
+val sink = Sink.fold[Int, Int](0)(_ + _)
+
+// connect the Source to the Sink, obtaining a RunnableGraph
+val runnable: RunnableGraph[Future[Int]] = source.toMat(sink)(Keep.right)
+
+// materialize the flow and get the value of the FoldSink
+val sum: Future[Int] = runnable.run()
+```
