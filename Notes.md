@@ -27,7 +27,7 @@ stages added by `transform()` like `PushStage`, `PushPullStage`, `StatefulStage`
 and graph junctions like `Merge` or `Broadcast`.
 
 *Note: Processing Stages are immutable*
-```
+```scala
 val source = Source(1 to 10)
 source.map(_ => 0) // has no effect on source, since it's immutable
 source.runWith(Sink.fold(0)(_ + _)) // 55
@@ -62,7 +62,7 @@ is the process of allocating all resources needed to run the computation
  described by a Flow (in Akka Streams this will often involve starting up
 Actors).
 
-```
+```scala
 val source = Source(1 to 10)
 val sink = Sink.fold[Int, Int](0)(_ + _)
 
