@@ -155,7 +155,7 @@ Sink.foreach[String](println(_))
 There are various ways to wire up different parts of a stream,
 the following examples show some of the available options:
 
-```
+```scala
 // Explicitly creating and wiring up a Source, Sink and Flow
 Source(1 to 6).via(Flow[Int].map(_ * 2)).to(Sink.foreach(println(_)))
 
