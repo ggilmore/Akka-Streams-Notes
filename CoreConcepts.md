@@ -201,7 +201,7 @@ val r4: Future[Int] = source.via(flow).runWith(sink)
 val r5: Promise[Unit] = flow.to(sink).runWith(source)
 val r6: (Promise[Unit], Future[Int]) = flow.runWith(source, sink)
 
-// Using more complext combinations
+// Using more complex combinations
 val r7: RunnableGraph[(Promise[Unit], Cancellable)] =
   source.viaMat(flow)(Keep.both).to(sink)
 
