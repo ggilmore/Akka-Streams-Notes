@@ -167,3 +167,74 @@ source.to(Sink.foreach(println(_)))
 val sink: Sink[Int, Unit] = Flow[Int].map(_ * 2).to(Sink.foreach(println(_)))
 Source(1 to 6).to(sink)
 ```
+
+### Stream Materialization
+
+Since every processing stage in Akka Streams can provide a materialized
+value after being materialized, it is necessary to somehow express how these
+ values should be composed to a final value when we plug these stages together.
+ For this, many combinator methods have variants that take an additional
+ argument, a function, that will be used to combine the resulting values.
+ Some examples of using these combiners are illustrated in the example below.
+
+ ```scala
+ // An empty source that can be shut down explicitly from the outside
+val source: Source[Int, Promise[Unit]] = Source.lazyEmpty[Int]
+
+// A flow that internally throttles elements to 1/second, and returns a Cancellable
+// which can be used to shut down the stream
+val flow: Flow[Int, Int, Cancellable] = throttler
+
+// A sink that returns the first element of a stream in the returned Future
+val sink: Sink[Int, Future[Int]] = Sink.head[Int]
+
+// By default, the materialized value of the leftmost stage is preserved
+val r1: RunnableGraph[Promise[Unit]] = source.via(flow).to(sink)
+
+// Simple selection of materialized values by using Keep.right
+val r2: RunnableGraph[Cancellable] = source.viaMat(flow)(Keep.right).to(sink)
+val r3: RunnableGraph[Future[Int]] = source.via(flow).toMat(sink)(Keep.right)
+
+// Using runWith will always give the materialized values of the stages added
+// by runWith() itself
+val r4: Future[Int] = source.via(flow).runWith(sink)
+val r5: Promise[Unit] = flow.to(sink).runWith(source)
+val r6: (Promise[Unit], Future[Int]) = flow.runWith(source, sink)
+
+// Using more complext combinations
+val r7: RunnableGraph[(Promise[Unit], Cancellable)] =
+  source.viaMat(flow)(Keep.both).to(sink)
+
+val r8: RunnableGraph[(Promise[Unit], Future[Int])] =
+  source.via(flow).toMat(sink)(Keep.both)
+
+val r9: RunnableGraph[((Promise[Unit], Cancellable), Future[Int])] =
+  source.viaMat(flow)(Keep.both).toMat(sink)(Keep.both)
+
+val r10: RunnableGraph[(Cancellable, Future[Int])] =
+  source.viaMat(flow)(Keep.right).toMat(sink)(Keep.both)
+
+// It is also possible to map over the materialized values. In r9 we had a
+// doubly nested pair, but we want to flatten it out
+val r11: RunnableGraph[(Promise[Unit], Cancellable, Future[Int])] =
+  r9.mapMaterializedValue {
+    case ((promise, cancellable), future) =>
+      (promise, cancellable, future)
+  }
+
+// Now we can use pattern matching to get the resulting materialized values
+val (promise, cancellable, future) = r11.run()
+
+// Type inference works as expected
+promise.success(0)
+cancellable.cancel()
+future.map(_ + 3)
+
+// The result of r11 can be also achieved by using the Graph API
+val r12: RunnableGraph[(Promise[Unit], Cancellable, Future[Int])] =
+  FlowGraph.closed(source, flow, sink)((_, _, _)) { implicit builder =>
+    (src, f, dst) =>
+      import FlowGraph.Implicits._
+      src ~> f ~> dst
+  }
+```
