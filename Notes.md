@@ -96,6 +96,5 @@ val sink = Sink.fold[Int, Int](0)(_ + _)
 // materialize the flow, getting the Sinks materialized value
 val sum: Future[Int] = source.runWith(sink)
 ```
-
-In the above example we used the `runWith` method, which both materializes the
-stream and returns the materialized value of the given sink or source.
+The `runWith` method both materializes the stream and returns the
+materialized value of the given sink or source.
