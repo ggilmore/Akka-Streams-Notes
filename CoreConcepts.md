@@ -37,7 +37,7 @@ zeroes.runWith(Sink.fold(0)(_ + _)) // 0
 ```
 ___
 
-Defining and running streams
+### Defining and running streams
 Linear processing pipelines can be expressed in Akka Streams using the following core abstractions:
 
 - Source:
@@ -98,3 +98,23 @@ val sum: Future[Int] = source.runWith(sink)
 ```
 The `runWith` method both materializes the stream and returns the
 materialized value of the given sink or source.
+
+Since a stream can be materialized multiple times, the materialized value
+will also be calculated anew for each such materialization, usually leading to
+ different values being returned each time. In the example below we create two
+ running materialized instance of the stream that we described in the `runnable` 
+ variable, and both materializations give us a different `Future` from the map
+ even though we used the same `sink` to refer to the future:
+
+ ```scala
+ // connect the Source to the Sink, obtaining a RunnableGraph
+val sink = Sink.fold[Int, Int](0)(_ + _)
+val runnable: RunnableGraph[Future[Int]] =
+  Source(1 to 10).toMat(sink)(Keep.right)
+
+// get the materialized value of the FoldSink
+val sum1: Future[Int] = runnable.run()
+val sum2: Future[Int] = runnable.run()
+
+// sum1 and sum2 are different Futures!
+```
