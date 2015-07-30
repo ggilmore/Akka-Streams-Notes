@@ -102,7 +102,7 @@ materialized value of the given sink or source.
 Since a stream can be materialized multiple times, the materialized value
 will also be calculated anew for each such materialization, usually leading to
  different values being returned each time. In the example below we create two
- running materialized instance of the stream that we described in the `runnable` 
+ running materialized instance of the stream that we described in the `runnable`
  variable, and both materializations give us a different `Future` from the map
  even though we used the same `sink` to refer to the future:
 
@@ -117,4 +117,53 @@ val sum1: Future[Int] = runnable.run()
 val sum2: Future[Int] = runnable.run()
 
 // sum1 and sum2 are different Futures!
+```
+
+### Defining sources, sinks and flows
+
+The objects `Source` and `Sink` define various ways to create sources and
+sinks of elements. The following examples show some of the most useful
+constructs (refer to the API documentation for more details):
+
+```scala
+// Create a source from an Iterable
+Source(List(1, 2, 3))
+
+// Create a source from a Future
+Source(Future.successful("Hello Streams!"))
+
+// Create a source from a single element
+Source.single("only one element")
+
+// an empty source
+Source.empty
+
+// Sink that folds over the stream and returns a Future
+// of the final result as its materialized value
+Sink.fold[Int, Int](0)(_ + _)
+
+// Sink that returns a Future as its materialized value,
+// containing the first element of the stream
+Sink.head
+
+// A Sink that consumes a stream without doing anything with the elements
+Sink.ignore
+
+// A Sink that executes a side-effecting call for every element of the stream
+Sink.foreach[String](println(_))
+```
+There are various ways to wire up different parts of a stream,
+the following examples show some of the available options:
+
+```
+// Explicitly creating and wiring up a Source, Sink and Flow
+Source(1 to 6).via(Flow[Int].map(_ * 2)).to(Sink.foreach(println(_)))
+
+// Starting from a Source
+val source = Source(1 to 6).map(_ * 2)
+source.to(Sink.foreach(println(_)))
+
+// Starting from a Sink
+val sink: Sink[Int, Unit] = Flow[Int].map(_ * 2).to(Sink.foreach(println(_)))
+Source(1 to 6).to(sink)
 ```
