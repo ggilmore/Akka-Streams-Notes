@@ -35,8 +35,9 @@ object WritePrimes {
       // act as if processing is really slow
       .map(i => { Thread.sleep(1000); ByteString(i.toString) })
       .toMat(fileSink)((_, bytesWritten) => bytesWritten)
+
     /**
-    * .toMat does:
+    * .toMat docs:
     * Connect this [[Flow]] to a [[Sink]], concatenating the processing steps of both.
     * {{{
     *     +----------------------------+
@@ -52,8 +53,9 @@ object WritePrimes {
     * The `combine` function is used to compose the materialized values of this flow and that
     * Sink into the materialized value of the resulting Sink.
     */
+    
     //in this case (_, bytesWritten) => bytesWritten is equivalent to Keep.right
-
+    //overall, connect the "throttler" to the file writer, return the size of the file when done
 
     // console output sink
     val consoleSink = Sink.foreach[Int](println)
