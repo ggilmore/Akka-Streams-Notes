@@ -79,11 +79,23 @@ materialized value, and it is the responsibility of the user to combine them to
 a new type. In the above example we used `toMat` to indicate that we want to
 transform the materialized value of the source and sink, and we used the
 convenience function `Keep.right` to say that we are only interested in the
-materialized value of the sink. In our example the FoldSink materializes a value
-of type `Future` which will represent the result of the folding process over the
-stream. In general, a stream can expose multiple materialized values, but it is
-quite common to be interested in only the value of the Source or the Sink in
+materialized value of the sink. In our example the `FoldSink` materializes a
+value of type `Future` which will represent the result of the folding
+ process over the stream. In general, a stream can expose multiple
+ materialized values, but it is quite common to be interested in only the
+ value of the `Source` or the `Sink` in
 the stream. For this reason there is a convenience method called `runWith()`
-available for Sink, Source or Flow requiring, respectively, a supplied Source
-(in order to run a Sink), a Sink (in order to run a Source) or both a Source
-and a Sink (in order to run a Flow, since it has neither attached yet).
+available for `Sink`, `Source` or `Flow` requiring, respectively, a supplied `Source`
+(in order to run a `Sink`), a `Sink` (in order to run a Source) or both a `Source`
+and a `Sink` (in order to run a `Flow`, since it has neither attached yet).
+
+```scala
+val source = Source(1 to 10)
+val sink = Sink.fold[Int, Int](0)(_ + _)
+
+// materialize the flow, getting the Sinks materialized value
+val sum: Future[Int] = source.runWith(sink)
+```
+
+In the above example we used the `runWith` method, which both materializes the
+stream and returns the materialized value of the given sink or source.
